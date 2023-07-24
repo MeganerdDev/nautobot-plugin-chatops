@@ -1017,6 +1017,17 @@ def get_circuit_providers(dispatcher, *args):
 
 
 @subcommand_of("nautobot")
+def run_job(dispatcher, job_name):
+    """Initiate a job in Nautobot by job name."""
+    blocks = [
+        dispatcher.markdown_block(f"run_job: {job_name}"),
+    ]
+
+    dispatcher.send_blocks(blocks)
+    return CommandStatusChoices.STATUS_SUCCEEDED
+
+
+@subcommand_of("nautobot")
 def about(dispatcher, *args):
     """Provide link for more information on Nautobot Apps."""
     url = "https://www.networktocode.com/nautobot/apps/"

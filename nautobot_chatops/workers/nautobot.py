@@ -1017,7 +1017,7 @@ def get_circuit_providers(dispatcher, *args):
 
 
 @subcommand_of("nautobot")
-def run_job(dispatcher, job_name): # **args): # optional args to include in large table
+def test(dispatcher): # **args): # optional args to include in large table
     """Initiate a job in Nautobot by job name."""
     # Get enabled jobs
     enabled_jobs = Job.objects.filter(enabled=True) # enabled=True, installed=True, runnable=True
@@ -1039,6 +1039,20 @@ def run_job(dispatcher, job_name): # **args): # optional args to include in larg
     #    dispatcher.markdown_block(f"run_job: {job_name}"),
     #]
     #dispatcher.send_blocks(blocks)
+
+    return CommandStatusChoices.STATUS_SUCCEEDED
+
+
+
+@subcommand_of("nautobot")
+def run_job(dispatcher, job_name): # **args): # optional args to include in large table
+    """Initiate a job in Nautobot by job name."""
+
+    blocks = [
+        dispatcher.markdown_block(f"run_job: {job_name}"),
+    ]
+    
+    dispatcher.send_blocks(blocks)
 
     return CommandStatusChoices.STATUS_SUCCEEDED
 

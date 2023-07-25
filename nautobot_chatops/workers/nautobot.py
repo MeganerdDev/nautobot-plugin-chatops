@@ -1043,7 +1043,7 @@ def run_job(dispatcher, job_name): # **args): # optional args to include in larg
     """Initiate a job in Nautobot by job name."""
 
     blocks = [
-        dispatcher.markdown_block(f"run_job: {job_name}"),
+        dispatcher.markdown_block(f"run_job: {job_name} ..."),
     ]
     
     dispatcher.send_blocks(blocks)

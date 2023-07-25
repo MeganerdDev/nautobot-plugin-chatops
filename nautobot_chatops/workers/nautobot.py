@@ -1040,6 +1040,33 @@ def run_noop(dispatcher): # **args): # optional args to include in large table
 
 
 @subcommand_of("nautobot")
+def get_jobs(dispatcher, **args):
+    """Get jobs from Nautobot."""
+    # Check for filters in user supplied input
+    filters = ["enabled", "installed", "runnable"]
+    if any([key in args for key in filters]):
+        filter_args = {key: args[key] for key in filters if key in args}
+        jobs = Job.objects.filter(**filter_args) # enabled=True, installed=True, runnable=True
+    else:
+        jobs = Job.objects.all()
+
+    #jobs_preview = [(j.slug, j.id) for j in enabled_jobs]
+
+    header = ["Name", "ID"]
+    rows = [
+        (
+            str(job.name),
+            str(job.id),
+        )
+        for job in jobs
+    ]
+
+    dispatcher.send_large_table(header, rows)
+
+    return CommandStatusChoices.STATUS_SUCCEEDED
+
+
+@subcommand_of("nautobot")
 def run_job(dispatcher, job_name): # **args): # optional args to include in large table
     """Initiate a job in Nautobot by job name."""
 

@@ -11,8 +11,8 @@ from nautobot.dcim.choices import DeviceStatusChoices
 from nautobot.dcim.models import Device, Site, DeviceRole, DeviceType, Manufacturer, Rack, Region, Cable
 from nautobot.ipam.models import VLAN, Prefix, VLANGroup, Role
 from nautobot.tenancy.models import Tenant
-from nautobot.extras.models import Status
-from nautobot.extras.jobs import Job
+from nautobot.extras.models import JobResult, Job, Status
+from nautobot.extras.jobs import run_job
 
 from nautobot_chatops.choices import CommandStatusChoices
 from nautobot_chatops.workers import subcommand_of, handle_subcommands
@@ -1044,7 +1044,7 @@ def run_job(dispatcher, job_name): # **args): # optional args to include in larg
     """Initiate a job in Nautobot by job name."""
 
     blocks = [
-        dispatcher.markdown_block(f"run_job: {job_name} ."),
+        dispatcher.markdown_block(f"run_job: {job_name} .."),
     ]
     
     dispatcher.send_blocks(blocks)

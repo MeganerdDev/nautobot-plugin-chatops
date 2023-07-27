@@ -1094,8 +1094,14 @@ def init_job(dispatcher, job_name): # **args): # optional args to include in lar
     """Initiate a job in Nautobot by job name."""
 
     job_pk = "353b1e2e-aa47-4c6b-84f3-41211693bfe6" # Static assigned value for test
+    #scheduled_job = get_object_or_404(ScheduledJob, pk=job_pk)
+    
+    scheduled_job = get_object_or_404(
+        Job.objects.all(),
+        #name="No-op testing job. it does nothing in particular!",
+        pk=job_pk,
+    )
 
-    scheduled_job = get_object_or_404(ScheduledJob, pk=job_pk)
     job_model = scheduled_job.job_model
     
     #initial = instance.get_initial() # instance is obj ..->? obj = form.save(commit=False)

@@ -1102,7 +1102,8 @@ def init_job(dispatcher, job_name): # **args): # optional args to include in lar
         pk=job_pk,
     )
 
-    job_model = scheduled_job.job_model
+    #job_model = scheduled_job.job_model
+    job_model = scheduled_job.model
     
     #initial = instance.get_initial() # instance is obj ..->? obj = form.save(commit=False)
     initial = scheduled_job.kwargs.get("data", {})#.copy()

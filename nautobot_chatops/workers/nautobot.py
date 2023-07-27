@@ -11,8 +11,9 @@ from nautobot.dcim.choices import DeviceStatusChoices
 from nautobot.dcim.models import Device, Site, DeviceRole, DeviceType, Manufacturer, Rack, Region, Cable
 from nautobot.ipam.models import VLAN, Prefix, VLANGroup, Role
 from nautobot.tenancy.models import Tenant
-from nautobot.extras.models import JobResult, Job, Status
 from nautobot.extras.jobs import run_job
+from nautobot.extras.models import Job, JobResult, ScheduledJob, Status
+from nautobot.extras.utils import get_job_content_type
 
 from nautobot_chatops.choices import CommandStatusChoices
 from nautobot_chatops.workers import subcommand_of, handle_subcommands
@@ -1040,12 +1041,12 @@ def run_noop(dispatcher): # **args): # optional args to include in large table
 
 
 @subcommand_of("nautobot")
-def get_jobs(dispatcher, **args):
-    """Get jobs from Nautobot."""
+def filter_jobs(dispatcher, job_filters):
+    """Filter jobs from Nautobot."""
     # Check for filters in user supplied input
     filters = ["enabled", "installed", "runnable"]
-    if any([key in args for key in filters]):
-        filter_args = {key: args[key] for key in filters if key in args}
+    if any([key in job_filters for key in filters]):
+        filter_args = {key: job_filters[key] for key in filters if key in job_filters}
         jobs = Job.objects.filter(**filter_args) # enabled=True, installed=True, runnable=True
     else:
         jobs = Job.objects.all()
@@ -1067,11 +1068,57 @@ def get_jobs(dispatcher, **args):
 
 
 @subcommand_of("nautobot")
-def run_job(dispatcher, job_name): # **args): # optional args to include in large table
+def get_jobs(dispatcher, job_filters):
+    """Get jobs from Nautobot."""
+    jobs = Job.objects.all()
+
+    header = ["Name", "ID", "Enabled"]
+    rows = [
+        (
+            str(job.name),
+            str(job.id),
+            str(job.enabled),
+
+        )
+        for job in jobs
+    ]
+
+    dispatcher.send_large_table(header, rows)
+
+    return CommandStatusChoices.STATUS_SUCCEEDED
+
+
+@subcommand_of("nautobot")
+def init_job(dispatcher, job_name): # **args): # optional args to include in large table
     """Initiate a job in Nautobot by job name."""
 
+    job_pk = "353b1e2e-aa47-4c6b-84f3-41211693bfe6" # Static assigned value for test
+
+    scheduled_job = get_object_or_404(ScheduledJob, pk=job_pk)
+    job_model = scheduled_job.job_model
+    
+    #initial = instance.get_initial() # instance is obj ..->? obj = form.save(commit=False)
+    initial = scheduled_job.kwargs.get("data", {})#.copy()
+    job_form = job_model.job_class.as_form(initial=initial)
+
+    result = JobResult.enqueue_job(
+        func=run_job,
+        name=job_model.class_path,
+        obj_type=get_job_content_type(),
+        user=request.user,
+        data=job_model.job_class.serialize_data(job_form.cleaned_data),
+        #data={
+        #    "object_pk": post_data["object_pk"],
+        #    "object_model_name": post_data["object_model_name"],
+        #},
+        request=copy_safe_request(request),
+        commit=True,
+    )
+
+
+
     blocks = [
-        dispatcher.markdown_block(f"run_job: {job_name} .."),
+        dispatcher.markdown_block(f"init_job: {job_name} ..."),
     ]
     
     dispatcher.send_blocks(blocks)

@@ -1101,26 +1101,31 @@ def init_job(dispatcher, job_name): # **args): # optional args to include in lar
     #    #name="No-op testing job. it does nothing in particular!",
     #    pk=job_pk,
     #)
+
     scheduled_job = Job.objects.filter(pk=job_pk)
 
     #job_model = scheduled_job.job_model
     job_model = scheduled_job.model
     
     #initial = instance.get_initial() # instance is obj ..->? obj = form.save(commit=False)
-    initial = scheduled_job.kwargs.get("data", {})#.copy()
-    job_form = job_model.job_class.as_form(initial=initial)
+    #initial = scheduled_job.kwargs.get("data", {})#.copy()
+    job_form = job_model.job_class.as_form() #initial=initial)
 
     result = JobResult.enqueue_job(
         func=run_job,
         name=job_model.class_path,
         obj_type=get_job_content_type(),
-        user=request.user,
-        data=job_model.job_class.serialize_data(job_form.cleaned_data),
+        user=None, #request.user,
+        #data=job_model.job_class.serialize_data(job_form.cleaned_data),
+        data={
+            "object_pk": job_pk,
+            "object_model_name": job_model.name,
+        }
         #data={
         #    "object_pk": post_data["object_pk"],
         #    "object_model_name": post_data["object_model_name"],
         #},
-        request=copy_safe_request(request),
+        request=None, #copy_safe_request(request),
         commit=True,
     )
 

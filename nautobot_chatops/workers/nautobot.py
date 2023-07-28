@@ -1123,7 +1123,7 @@ def init_job(dispatcher, job_name): # **args): # optional args to include in lar
         job_id=uuid.uuid4(),
     )
 
-    with web_request_context(user=user) as request:
+    with web_request_context(user=user_instance) as request:
         run_job(data=data, request=request, commit=commit, job_result_pk=job_result.pk)
     
     # Working.. sort of

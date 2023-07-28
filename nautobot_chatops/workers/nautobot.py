@@ -1,5 +1,7 @@
 """Worker functions for interacting with Nautobot."""
 
+import uuid
+
 from django.core.exceptions import ValidationError
 from django.db.models import Count
 from django.contrib.contenttypes.models import ContentType
@@ -1106,30 +1108,56 @@ def init_job(dispatcher, job_name): # **args): # optional args to include in lar
     scheduled_job = Job.objects.filter(pk=job_pk)
 
     #job_model = scheduled_job.job_model
-    job_model = scheduled_job.model
+    #job_model = scheduled_job.model
+    job_model = Job.objects.get_for_class_path(job_class_path)
+
+
+    data = {}
+    commit = True
+    profile = False
+    user_instance = User.objects.get(username="meganerd")
+    
+    job_result = JobResult.objects.create(
+        name=job_model.class_path,
+        job_kwargs={"data": data, "commit": commit, "profile": profile},
+        obj_type=get_job_content_type(),
+        user=user_instance,
+        job_model=job_model,
+        job_id=uuid.uuid4(),
+    )
+
+    result = job_result.enqueue_job(
+        func=run_job,
+        name=job_model.class_path,
+        obj_type=get_job_content_type(),
+        user=user_instance,
+        data={},
+        request=None,
+        commit=True,
+    )
+
     
     #initial = instance.get_initial() # instance is obj ..->? obj = form.save(commit=False)
     #initial = scheduled_job.kwargs.get("data", {})#.copy()
     #job_form = job_model.job_class.as_form() #initial=initial)
 
-    result = JobResult.enqueue_job(
-        func=run_job,
-        name=job_class_path, #job_model.class_path,
-        obj_type=get_job_content_type(),
-        user=None, #request.user,
-        #data=job_model.job_class.serialize_data(job_form.cleaned_data),
-        data={
-            "object_pk": job_pk,
-            "object_model_name": job_model.name,
-        },
-        #data={
-        #    "object_pk": post_data["object_pk"],
-        #    "object_model_name": post_data["object_model_name"],
-        #},
-        request=None, #copy_safe_request(request),
-        commit=True,
-    )
-
+    #result = JobResult.enqueue_job(
+    #    func=run_job,
+    #    name=job_class_path, #job_model.class_path,
+    #    obj_type=get_job_content_type(),
+    #    user=None, #request.user,
+    #    #data=job_model.job_class.serialize_data(job_form.cleaned_data),
+    #    data={
+    #        "object_pk": job_pk,
+    #        "object_model_name": job_model.name,
+    #    },
+    #    #data={
+    #    #    "object_pk": post_data["object_pk"],
+    #    #    "object_model_name": post_data["object_model_name"],
+    #    #},
+    #    request=None, #copy_safe_request(request),
+    #    commit=True,
+    #)
 
 
     blocks = [

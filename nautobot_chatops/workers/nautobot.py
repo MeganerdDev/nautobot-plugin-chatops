@@ -1120,7 +1120,7 @@ def init_job(dispatcher, job_name): # **args): # optional args to include in lar
         data={
             "object_pk": job_pk,
             "object_model_name": job_model.name,
-        }
+        },
         #data={
         #    "object_pk": post_data["object_pk"],
         #    "object_model_name": post_data["object_model_name"],

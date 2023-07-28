@@ -7,7 +7,6 @@ from django.core.exceptions import ValidationError
 from django.db.models import Count
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
-from django.test.client import RequestFactory # Test
 from django_rq import job
 
 from nautobot.dcim.models.device_components import Interface, FrontPort, RearPort
@@ -1110,10 +1109,6 @@ def init_job(dispatcher, job_name): # **args): # optional args to include in lar
     User = get_user_model()
     user_instance = User.objects.get(username="meganerd")
 
-    #request = RequestFactory().request(SERVER_NAME="nautobot_server_runjob")
-    #request.id = uuid.uuid4()
-    #request.user = user
-
     job_result = JobResult.objects.create(
         name=job_model.class_path,
         job_kwargs={"data": data, "commit": commit, "profile": profile},
@@ -1124,18 +1119,20 @@ def init_job(dispatcher, job_name): # **args): # optional args to include in lar
     )
 
     with web_request_context(user=user_instance) as request:
-        run_job(data=data, request=request, commit=commit, job_result_pk=job_result.pk)
+        
+        # Working
+        #run_job(data=data, request=request, commit=commit, job_result_pk=job_result.pk)
     
-    # Working.. sort of
-    #result = job_result.enqueue_job(
-    #    func=run_job,
-    #    name=job_model.class_path,
-    #    obj_type=get_job_content_type(),
-    #    user=user_instance,
-    #    data={},
-    #    request=None,
-    #    commit=True,
-    #)
+        # Job runs but gets stuck in running status with no logged events?
+        result = job_result.enqueue_job(
+            func=run_job,
+            name=job_model.class_path,
+            obj_type=get_job_content_type(),
+            user=user_instance,
+            data=data,
+            request=request,
+            commit=True,
+        )
 
     blocks = [
         dispatcher.markdown_block(f"init_job: {job_name} ..."),

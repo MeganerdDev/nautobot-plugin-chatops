@@ -1094,6 +1094,7 @@ def init_job(dispatcher, job_name): # **args): # optional args to include in lar
     """Initiate a job in Nautobot by job name."""
 
     job_pk = "353b1e2e-aa47-4c6b-84f3-41211693bfe6" # Static assigned value for test
+    job_class_path = "local/noopjob/NoOpJob"
     #scheduled_job = get_object_or_404(ScheduledJob, pk=job_pk)
     
     #scheduled_job = get_object_or_404(
@@ -1113,7 +1114,7 @@ def init_job(dispatcher, job_name): # **args): # optional args to include in lar
 
     result = JobResult.enqueue_job(
         func=run_job,
-        name=job_model.class_path,
+        name=job_class_path, #job_model.class_path,
         obj_type=get_job_content_type(),
         user=None, #request.user,
         #data=job_model.job_class.serialize_data(job_form.cleaned_data),

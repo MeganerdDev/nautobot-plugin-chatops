@@ -2,6 +2,7 @@
 
 import uuid
 
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db.models import Count
 from django.contrib.contenttypes.models import ContentType
@@ -1115,6 +1116,8 @@ def init_job(dispatcher, job_name): # **args): # optional args to include in lar
     data = {}
     commit = True
     profile = False
+    username = "meganerd"
+    User = get_user_model()
     user_instance = User.objects.get(username="meganerd")
     
     job_result = JobResult.objects.create(

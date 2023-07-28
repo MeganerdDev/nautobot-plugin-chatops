@@ -1089,7 +1089,7 @@ def init_job(dispatcher, job_class_path):
     # Create an instance of job result
     job_result = JobResult.objects.create(
         name=job_model.class_path,
-        job_kwargs={"data": {}, "commit": commit, "profile": False},
+        job_kwargs={"data": {}, "commit": True, "profile": False},
         obj_type=get_job_content_type(),
         user=user_instance,
         job_model=job_model,

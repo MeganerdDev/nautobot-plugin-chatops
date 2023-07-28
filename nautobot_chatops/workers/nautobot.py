@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import Count
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
+from django.test.client import RequestFactory # Test
 from django_rq import job
 
 from nautobot.dcim.models.device_components import Interface, FrontPort, RearPort
@@ -15,6 +16,7 @@ from nautobot.dcim.choices import DeviceStatusChoices
 from nautobot.dcim.models import Device, Site, DeviceRole, DeviceType, Manufacturer, Rack, Region, Cable
 from nautobot.ipam.models import VLAN, Prefix, VLANGroup, Role
 from nautobot.tenancy.models import Tenant
+from nautobot.extras.context_managers import web_request_context
 from nautobot.extras.jobs import run_job
 from nautobot.extras.models import Job, JobResult, ScheduledJob, Status
 from nautobot.extras.utils import get_job_content_type
@@ -1098,20 +1100,8 @@ def init_job(dispatcher, job_name): # **args): # optional args to include in lar
 
     job_pk = "353b1e2e-aa47-4c6b-84f3-41211693bfe6" # Static assigned value for test
     job_class_path = "local/noopjob/NoOpJob"
-    #scheduled_job = get_object_or_404(ScheduledJob, pk=job_pk)
-    
-    #scheduled_job = get_object_or_404(
-    #    Job.objects.all(),
-    #    #name="No-op testing job. it does nothing in particular!",
-    #    pk=job_pk,
-    #)
-
     scheduled_job = Job.objects.filter(pk=job_pk)
-
-    #job_model = scheduled_job.job_model
-    #job_model = scheduled_job.model
     job_model = Job.objects.get_for_class_path(job_class_path)
-
 
     data = {}
     commit = True
@@ -1119,7 +1109,11 @@ def init_job(dispatcher, job_name): # **args): # optional args to include in lar
     username = "meganerd"
     User = get_user_model()
     user_instance = User.objects.get(username="meganerd")
-    
+
+    #request = RequestFactory().request(SERVER_NAME="nautobot_server_runjob")
+    #request.id = uuid.uuid4()
+    #request.user = user
+
     job_result = JobResult.objects.create(
         name=job_model.class_path,
         job_kwargs={"data": data, "commit": commit, "profile": profile},
@@ -1129,39 +1123,19 @@ def init_job(dispatcher, job_name): # **args): # optional args to include in lar
         job_id=uuid.uuid4(),
     )
 
-    result = job_result.enqueue_job(
-        func=run_job,
-        name=job_model.class_path,
-        obj_type=get_job_content_type(),
-        user=user_instance,
-        data={},
-        request=None,
-        commit=True,
-    )
-
+    with web_request_context(user=user) as request:
+        run_job(data=data, request=request, commit=commit, job_result_pk=job_result.pk)
     
-    #initial = instance.get_initial() # instance is obj ..->? obj = form.save(commit=False)
-    #initial = scheduled_job.kwargs.get("data", {})#.copy()
-    #job_form = job_model.job_class.as_form() #initial=initial)
-
-    #result = JobResult.enqueue_job(
+    # Working.. sort of
+    #result = job_result.enqueue_job(
     #    func=run_job,
-    #    name=job_class_path, #job_model.class_path,
+    #    name=job_model.class_path,
     #    obj_type=get_job_content_type(),
-    #    user=None, #request.user,
-    #    #data=job_model.job_class.serialize_data(job_form.cleaned_data),
-    #    data={
-    #        "object_pk": job_pk,
-    #        "object_model_name": job_model.name,
-    #    },
-    #    #data={
-    #    #    "object_pk": post_data["object_pk"],
-    #    #    "object_model_name": post_data["object_model_name"],
-    #    #},
-    #    request=None, #copy_safe_request(request),
+    #    user=user_instance,
+    #    data={},
+    #    request=None,
     #    commit=True,
     #)
-
 
     blocks = [
         dispatcher.markdown_block(f"init_job: {job_name} ..."),

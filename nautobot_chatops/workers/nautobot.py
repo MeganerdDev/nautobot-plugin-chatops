@@ -1109,7 +1109,7 @@ def init_job(dispatcher, job_name): # **args): # optional args to include in lar
     
     #initial = instance.get_initial() # instance is obj ..->? obj = form.save(commit=False)
     #initial = scheduled_job.kwargs.get("data", {})#.copy()
-    job_form = job_model.job_class.as_form() #initial=initial)
+    #job_form = job_model.job_class.as_form() #initial=initial)
 
     result = JobResult.enqueue_job(
         func=run_job,

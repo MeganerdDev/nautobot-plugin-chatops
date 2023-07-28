@@ -1024,30 +1024,9 @@ def get_circuit_providers(dispatcher, *args):
 
 
 @subcommand_of("nautobot")
-def run_noop(dispatcher): # **args): # optional args to include in large table
-    """Testing subcommand."""
-    # Get enabled jobs
-    enabled_jobs = Job.objects.filter(enabled=True) # enabled=True, installed=True, runnable=True
-
-    #jobs_preview = [(j.slug, j.id) for j in enabled_jobs]
-
-    header = ["Name", "ID"]
-    rows = [
-        (
-            str(job.name),
-            str(job.id),
-        )
-        for job in enabled_jobs
-    ]
-
-    dispatcher.send_large_table(header, rows)
-
-    return CommandStatusChoices.STATUS_SUCCEEDED
-
-
-@subcommand_of("nautobot")
 def filter_jobs(dispatcher, job_filters):
     """Filter jobs from Nautobot."""
+
     # Check for filters in user supplied input
     filters = ["enabled", "installed", "runnable"]
     if any([key in job_filters for key in filters]):
@@ -1094,9 +1073,10 @@ def get_jobs(dispatcher, job_filters):
 
 
 @subcommand_of("nautobot")
-def init_job(dispatcher, job_class_path, username):
+def init_job(dispatcher, job_class_path):
     """Initiate a job in Nautobot by job name."""
-    
+    username = "meganerd" # Is there something standard to use, "admin", "chatops-admin"? Merry up chat username to nautobot user table?
+
     # Get instance of the user who will run the job
     User = get_user_model()
     user_instance = User.objects.get(username=username)
@@ -1111,23 +1091,23 @@ def init_job(dispatcher, job_class_path, username):
         name=job_model.class_path,
         job_kwargs={"data": {}, "commit": commit, "profile": False},
         obj_type=get_job_content_type(),
-        user=None, #user_instance,
+        user=user_instance,
         job_model=job_model,
         job_id=uuid.uuid4(),
     )
-
-    #with web_request_context(user=user_instance) as request:
-    run_job(data=data, request=None, commit=True, job_result_pk=job_result.pk)
-
     
+    # Emulate HTTP context for the request as the user
+    with web_request_context(user=user_instance) as request:
+        run_job(data=data, request=request, commit=True, job_result_pk=job_result.pk)
+
     # Job runs but gets stuck in running status with no logged events?
     #result = job_result.enqueue_job(
     #    func=run_job,
     #    name=job_model.class_path,
     #    obj_type=get_job_content_type(),
-    #    user=user_instance,
+    #    user=user_instance, # User might be able to be left as NoneType here?
     #    data={},
-    #    request=None,
+    #    request=None, # Exception here
     #    commit=True,
     #)
 

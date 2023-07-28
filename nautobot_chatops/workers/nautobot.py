@@ -1094,48 +1094,45 @@ def get_jobs(dispatcher, job_filters):
 
 
 @subcommand_of("nautobot")
-def init_job(dispatcher, job_name): # **args): # optional args to include in large table
+def init_job(dispatcher, job_class_path, username):
     """Initiate a job in Nautobot by job name."""
+    
+    # Get instance of the user who will run the job
+    User = get_user_model()
+    user_instance = User.objects.get(username=username)
 
-    job_pk = "353b1e2e-aa47-4c6b-84f3-41211693bfe6" # Static assigned value for test
-    job_class_path = "local/noopjob/NoOpJob"
-    scheduled_job = Job.objects.filter(pk=job_pk)
+    #job_class_path = "local/noopjob/NoOpJob" # Static testing
+    
+    # Get the job model instance using class path
     job_model = Job.objects.get_for_class_path(job_class_path)
 
-    data = {}
-    commit = True
-    profile = False
-    username = "meganerd"
-    User = get_user_model()
-    user_instance = User.objects.get(username="meganerd")
-
+    # Create an instance of job result
     job_result = JobResult.objects.create(
         name=job_model.class_path,
-        job_kwargs={"data": data, "commit": commit, "profile": profile},
+        job_kwargs={"data": {}, "commit": commit, "profile": False},
         obj_type=get_job_content_type(),
-        user=user_instance,
+        user=None, #user_instance,
         job_model=job_model,
         job_id=uuid.uuid4(),
     )
 
-    with web_request_context(user=user_instance) as request:
-        
-        # Working
-        #run_job(data=data, request=request, commit=commit, job_result_pk=job_result.pk)
+    #with web_request_context(user=user_instance) as request:
+    run_job(data=data, request=None, commit=True, job_result_pk=job_result.pk)
+
     
-        # Job runs but gets stuck in running status with no logged events?
-        result = job_result.enqueue_job(
-            func=run_job,
-            name=job_model.class_path,
-            obj_type=get_job_content_type(),
-            user=user_instance,
-            data=data,
-            request=request,
-            commit=True,
-        )
+    # Job runs but gets stuck in running status with no logged events?
+    #result = job_result.enqueue_job(
+    #    func=run_job,
+    #    name=job_model.class_path,
+    #    obj_type=get_job_content_type(),
+    #    user=user_instance,
+    #    data={},
+    #    request=None,
+    #    commit=True,
+    #)
 
     blocks = [
-        dispatcher.markdown_block(f"init_job: {job_name} ..."),
+        dispatcher.markdown_block(f"init_job: {job_class_path} ..."),
     ]
     
     dispatcher.send_blocks(blocks)

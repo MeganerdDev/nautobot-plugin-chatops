@@ -1098,7 +1098,7 @@ def init_job(dispatcher, job_class_path):
     
     # Emulate HTTP context for the request as the user
     with web_request_context(user=user_instance) as request:
-        run_job(data=data, request=request, commit=True, job_result_pk=job_result.pk)
+        run_job(data={}, request=request, commit=True, job_result_pk=job_result.pk)
 
     # Job runs but gets stuck in running status with no logged events?
     #result = job_result.enqueue_job(

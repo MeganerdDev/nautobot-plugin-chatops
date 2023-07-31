@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import Count
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
+from django.test.client import RequestFactory # Workaround testing
 from django_rq import job
 
 from nautobot.dcim.models.device_components import Interface, FrontPort, RearPort
@@ -1095,14 +1096,20 @@ def init_job(dispatcher, job_name):
         name=job_model.class_path,
         job_kwargs={"data": {}, "commit": True, "profile": False},
         obj_type=get_job_content_type(),
-        user=user_instance,
+        user="", #user_instance,
         job_model=job_model,
         job_id=uuid.uuid4(),
     )
     
     # Emulate HTTP context for the request as the user
-    with web_request_context(user=user_instance) as request:
-        run_job(data={}, request=request, commit=True, job_result_pk=job_result.pk)
+    #with web_request_context(user=user_instance) as request:
+    #    run_job(data={}, request=request, commit=True, job_result_pk=job_result.pk)
+
+    request = RequestFactory().request(SERVER_NAME="web_request_context")
+    request.user = "" #user
+    change_context = ORMChangeContext(request=request, context_detail=context_detail, change_id=change_id)
+    with change_logging(change_context):
+        yield request
 
     # Job runs but gets stuck in running status with no logged events?
     #result = job_result.enqueue_job(
@@ -1116,7 +1123,7 @@ def init_job(dispatcher, job_name):
     #)
 
     blocks = [
-        dispatcher.markdown_block(f"init_job: {job_class_path} ..."),
+        dispatcher.markdown_block(f"job {job_class_path} initated!"),
     ]
     
     dispatcher.send_blocks(blocks)

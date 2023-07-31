@@ -1102,14 +1102,8 @@ def init_job(dispatcher, job_name):
     )
     
     # Emulate HTTP context for the request as the user
-    #with web_request_context(user=user_instance) as request:
-    #    run_job(data={}, request=request, commit=True, job_result_pk=job_result.pk)
-
-    request = RequestFactory().request(SERVER_NAME="web_request_context")
-    request.user = None #user
-    change_context = ORMChangeContext(request=request, context_detail=context_detail, change_id=change_id)
-    with change_logging(change_context):
-        yield request
+    with web_request_context(user=user_instance) as request:
+        run_job(data={}, request=request, commit=True, job_result_pk=job_result.pk)
 
     # Job runs but gets stuck in running status with no logged events?
     #result = job_result.enqueue_job(

@@ -1073,19 +1073,23 @@ def get_jobs(dispatcher, job_filters):
 
 
 @subcommand_of("nautobot")
-def init_job(dispatcher, job_class_path):
+def init_job(dispatcher, job_name):
     """Initiate a job in Nautobot by job name."""
     username = "meganerd" # Is there something standard to use, "admin", "chatops-admin"? Merry up chat username to nautobot user table?
 
     # Get instance of the user who will run the job
     User = get_user_model()
     user_instance = User.objects.get(username=username)
+ 
+    # Get the job model instance using job name
+    #job_name = "No-op testing job. it does nothing in particular!" # Static testing
+    job_model = Job.objects.get(name=job_name)
+    job_class_path = job_model.class_path
 
-    #job_class_path = "local/noopjob/NoOpJob" # Static testing
-    
     # Get the job model instance using class path
-    job_model = Job.objects.get_for_class_path(job_class_path)
-
+    #job_class_path = "local/noopjob/NoOpJob" # Static testing
+    #job_model = Job.objects.get_for_class_path(job_class_path)
+    
     # Create an instance of job result
     job_result = JobResult.objects.create(
         name=job_model.class_path,

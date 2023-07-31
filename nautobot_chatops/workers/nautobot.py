@@ -1096,7 +1096,7 @@ def init_job(dispatcher, job_name):
         name=job_model.class_path,
         job_kwargs={"data": {}, "commit": True, "profile": False},
         obj_type=get_job_content_type(),
-        user="", #user_instance,
+        user=None, #user_instance,
         job_model=job_model,
         job_id=uuid.uuid4(),
     )
@@ -1106,7 +1106,7 @@ def init_job(dispatcher, job_name):
     #    run_job(data={}, request=request, commit=True, job_result_pk=job_result.pk)
 
     request = RequestFactory().request(SERVER_NAME="web_request_context")
-    request.user = "" #user
+    request.user = None #user
     change_context = ORMChangeContext(request=request, context_detail=context_detail, change_id=change_id)
     with change_logging(change_context):
         yield request

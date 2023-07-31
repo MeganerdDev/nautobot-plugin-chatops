@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import Count
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
-from django.test.client import RequestFactory # Workaround testing
+from django.test.client import RequestFactory  # Workaround testing
 from django_rq import job
 
 from nautobot.dcim.models.device_components import Interface, FrontPort, RearPort
@@ -1032,11 +1032,11 @@ def filter_jobs(dispatcher, job_filters):
     filters = ["enabled", "installed", "runnable"]
     if any([key in job_filters for key in filters]):
         filter_args = {key: job_filters[key] for key in filters if key in job_filters}
-        jobs = Job.objects.filter(**filter_args) # enabled=True, installed=True, runnable=True
+        jobs = Job.objects.filter(**filter_args)  # enabled=True, installed=True, runnable=True
     else:
         jobs = Job.objects.all()
 
-    #jobs_preview = [(j.slug, j.id) for j in enabled_jobs]
+    # jobs_preview = [(j.slug, j.id) for j in enabled_jobs]
 
     header = ["Name", "ID"]
     rows = [
@@ -1063,7 +1063,6 @@ def get_jobs(dispatcher, job_filters):
             str(job.name),
             str(job.id),
             str(job.enabled),
-
         )
         for job in jobs
     ]
@@ -1076,37 +1075,37 @@ def get_jobs(dispatcher, job_filters):
 @subcommand_of("nautobot")
 def init_job(dispatcher, job_name):
     """Initiate a job in Nautobot by job name."""
-    username = "meganerd" # Is there something standard to use, "admin", "chatops-admin"? Merry up chat username to nautobot user table?
+    username = "meganerd"  # Is there something standard to use, "admin", "chatops-admin"? Merry up chat username to nautobot user table?
 
     # Get instance of the user who will run the job
     User = get_user_model()
     user_instance = User.objects.get(username=username)
- 
+
     # Get the job model instance using job name
-    #job_name = "No-op testing job. it does nothing in particular!" # Static testing
+    # job_name = "No-op testing job. it does nothing in particular!" # Static testing
     job_model = Job.objects.get(name=job_name)
     job_class_path = job_model.class_path
 
     # Get the job model instance using class path
-    #job_class_path = "local/noopjob/NoOpJob" # Static testing
-    #job_model = Job.objects.get_for_class_path(job_class_path)
-    
+    # job_class_path = "local/noopjob/NoOpJob" # Static testing
+    # job_model = Job.objects.get_for_class_path(job_class_path)
+
     # Create an instance of job result
     job_result = JobResult.objects.create(
         name=job_model.class_path,
         job_kwargs={"data": {}, "commit": True, "profile": False},
         obj_type=get_job_content_type(),
-        user=None, #user_instance,
+        user=None,  # user_instance,
         job_model=job_model,
         job_id=uuid.uuid4(),
     )
-    
+
     # Emulate HTTP context for the request as the user
     with web_request_context(user=user_instance) as request:
         run_job(data={}, request=request, commit=True, job_result_pk=job_result.pk)
 
     # Job runs but gets stuck in running status with no logged events?
-    #result = job_result.enqueue_job(
+    # result = job_result.enqueue_job(
     #    func=run_job,
     #    name=job_model.class_path,
     #    obj_type=get_job_content_type(),
@@ -1114,12 +1113,12 @@ def init_job(dispatcher, job_name):
     #    data={},
     #    request=None, # Exception here
     #    commit=True,
-    #)
+    # )
 
     blocks = [
         dispatcher.markdown_block(f"job {job_class_path} initated!"),
     ]
-    
+
     dispatcher.send_blocks(blocks)
 
     return CommandStatusChoices.STATUS_SUCCEEDED

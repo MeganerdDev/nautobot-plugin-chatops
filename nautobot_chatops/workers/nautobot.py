@@ -1027,7 +1027,6 @@ def get_circuit_providers(dispatcher, *args):
 @subcommand_of("nautobot")
 def filter_jobs(dispatcher, job_filters):
     """Filter jobs from Nautobot."""
-
     # Check for filters in user supplied input
     filters = ["enabled", "installed", "runnable"]
     if any([key in job_filters for key in filters]):
@@ -1057,11 +1056,12 @@ def get_jobs(dispatcher, job_filters):
     """Get jobs from Nautobot."""
     jobs = Job.objects.all()
 
-    header = ["Name", "ID", "Enabled"]
+    header = ["Name", "ID", "Class Path", "Enabled"]
     rows = [
         (
             str(job.name),
             str(job.id),
+            str(job.class_path),
             str(job.enabled),
         )
         for job in jobs
